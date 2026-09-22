@@ -3,8 +3,61 @@ import app from '../src/app.js';
 import db from '../src/config/database.js';
 import { tokenService } from '../src/services/tokenService.js';
 import { passwordService } from '../src/services/passwordService.js';
+import { validationService } from '../src/services/validationService.js';
 
-// Helper to generate unique test data
+// Helper to generate valid CPF
+const generateValidCPF = () => {
+  // Generate 9 random digits
+  const base = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10)).join('');
+  
+  // Calculate first check digit
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(base[i]) * (10 - i);
+  }
+  let digit1 = 11 - (sum % 11);
+  if (digit1 >= 10) digit1 = 0;
+  
+  // Calculate second check digit
+  sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(base[i]) * (11 - i);
+  }
+  sum += digit1 * 2;
+  let digit2 = 11 - (sum % 11);
+  if (digit2 >= 10) digit2 = 0;
+  
+  return base + digit1 + digit2;
+};
+
+// Helper to generate valid CNPJ
+const generateValidCNPJ = () => {
+  // Generate 12 random digits
+  const base = Array.from({ length: 12 }, () => Math.floor(Math.random() * 10)).join('');
+  
+  // Calculate first check digit
+  const weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  let sum = 0;
+  for (let i = 0; i < 12; i++) {
+    sum += parseInt(base[i]) * weights1[i];
+  }
+  let digit1 = sum % 11;
+  digit1 = digit1 < 2 ? 0 : 11 - digit1;
+  
+  // Calculate second check digit
+  const weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  sum = 0;
+  for (let i = 0; i < 12; i++) {
+    sum += parseInt(base[i]) * weights2[i + 1];
+  }
+  sum += digit1 * weights2[0];
+  let digit2 = sum % 11;
+  digit2 = digit2 < 2 ? 0 : 11 - digit2;
+  
+  return base + digit1 + digit2;
+};
+
+// Helper to generate unique test data with valid documents
 const generateTestUser = (suffix, userType = 'PROFISSIONAL') => {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(7);
@@ -16,7 +69,7 @@ const generateTestUser = (suffix, userType = 'PROFISSIONAL') => {
       password: 'Senha123!',
       user_type: 'EMPRESA',
       document_type: 'CNPJ',
-      document_number: `112223330001${String(suffix).padStart(2, '0')}`,
+      document_number: generateValidCNPJ(),
       full_name: `Empresa ${base}`,
     };
   }
@@ -26,20 +79,9 @@ const generateTestUser = (suffix, userType = 'PROFISSIONAL') => {
     password: 'Senha123!',
     user_type: 'PROFISSIONAL',
     document_type: 'CPF',
-    document_number: `111444777${String(suffix).padStart(2, '0')}`,
+    document_number: generateValidCPF(),
     full_name: `Profissional ${base}`,
   };
-};
-
-const generateValidCPF = () => {
-  // Generate a valid CPF for testing
-  const base = Math.floor(Math.random() * 900000000) + 100000000;
-  return base.toString().padStart(9, '0') + '35'; // Simplified - not actually valid but unique
-};
-
-const generateValidCNPJ = () => {
-  const base = Math.floor(Math.random() * 900000000000) + 100000000000;
-  return base.toString().padStart(12, '0') + '81'; // Simplified - not actually valid but unique
 };
 
 describe('Zircon API Integration Tests', () => {
@@ -428,11 +470,24 @@ describe('Zircon API Integration Tests', () => {
     });
 
     test('PUT /api/applications/:id/status should allow PENDENTE -> APROVADA', async () => {
-      // Create another application to test direct approval
+      // Create a second opportunity for this test
+      const secondOpportunity = await request(app)
+        .post('/api/opportunities')
+        .set('Authorization', `Bearer ${empresaToken}`)
+        .send({
+          job_title: 'Second Opportunity',
+          job_description: 'Test',
+          company_sector: 'Tecnologia',
+          payment_value: 5000,
+          work_modality: 'HOME_OFFICE',
+        });
+      const secondOpportunityId = secondOpportunity.body.data.opportunity.id;
+
+      // Create application for the second opportunity
       const newApp = await request(app)
         .post('/api/applications')
         .set('Authorization', `Bearer ${profissionalToken}`)
-        .send({ vacancy_id: opportunityId });
+        .send({ vacancy_id: secondOpportunityId });
 
       const newAppId = newApp.body.data.application.id;
 
@@ -447,11 +502,24 @@ describe('Zircon API Integration Tests', () => {
     });
 
     test('DELETE /api/applications/:id should cancel application (owner)', async () => {
-      // Create another application to cancel
+      // Create a third opportunity for this test
+      const thirdOpportunity = await request(app)
+        .post('/api/opportunities')
+        .set('Authorization', `Bearer ${empresaToken}`)
+        .send({
+          job_title: 'Third Opportunity',
+          job_description: 'Test',
+          company_sector: 'Tecnologia',
+          payment_value: 5000,
+          work_modality: 'HOME_OFFICE',
+        });
+      const thirdOpportunityId = thirdOpportunity.body.data.opportunity.id;
+
+      // Create application for the third opportunity
       const newApp = await request(app)
         .post('/api/applications')
         .set('Authorization', `Bearer ${profissionalToken}`)
-        .send({ vacancy_id: opportunityId });
+        .send({ vacancy_id: thirdOpportunityId });
 
       const newAppId = newApp.body.data.application.id;
 
@@ -476,6 +544,7 @@ describe('Zircon API Integration Tests', () => {
 
   describe('Role-based Access Control', () => {
     test('PROFISSIONAL cannot access EMPRESA routes', async () => {
+      // Try to access EMPRESA-only route (list own opportunities)
       const response = await request(app)
         .get('/api/opportunities/my')
         .set('Authorization', `Bearer ${profissionalToken}`);
