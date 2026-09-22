@@ -2,6 +2,7 @@ import { applicationModel } from '../models/applicationModel.js';
 import { opportunityModel } from '../models/opportunityModel.js';
 import { userModel } from '../models/userModel.js';
 import { emailService } from '../services/emailService.js';
+import { buildPaginatedResponse } from '../utils/apiResponse.js';
 
 export const applicationController = {
   async create(req, res, next) {
@@ -89,18 +90,14 @@ export const applicationController = {
       const applications = await applicationModel.findAll(filters);
       const total = await applicationModel.count(filters);
 
-      res.json({
-        success: true,
-        data: {
-          applications,
-          pagination: {
-            page: Number(page),
-            limit: Number(limit),
-            total,
-            totalPages: Math.ceil(total / Number(limit)),
-          },
-        },
-      });
+      res.json(buildPaginatedResponse({
+        message: 'Lista de candidaturas carregada com sucesso',
+        collectionKey: 'applications',
+        data: applications,
+        page,
+        limit,
+        total,
+      }));
     } catch (error) {
       next(error);
     }
@@ -170,18 +167,14 @@ export const applicationController = {
       const applications = await applicationModel.getByVacancyWithProfessional(Number(id));
       const total = await applicationModel.count(filters);
 
-      res.json({
-        success: true,
-        data: {
-          applications,
-          pagination: {
-            page: Number(page),
-            limit: Number(limit),
-            total,
-            totalPages: Math.ceil(total / Number(limit)),
-          },
-        },
-      });
+      res.json(buildPaginatedResponse({
+        message: 'Lista de candidaturas da vaga carregada com sucesso',
+        collectionKey: 'applications',
+        data: applications,
+        page,
+        limit,
+        total,
+      }));
     } catch (error) {
       next(error);
     }
@@ -308,18 +301,14 @@ export const applicationController = {
       const applications = await applicationModel.findAll(filters);
       const total = await applicationModel.count(filters);
 
-      res.json({
-        success: true,
-        data: {
-          applications,
-          pagination: {
-            page: Number(page),
-            limit: Number(limit),
-            total,
-            totalPages: Math.ceil(total / Number(limit)),
-          },
-        },
-      });
+      res.json(buildPaginatedResponse({
+        message: 'Lista de candidaturas carregada com sucesso',
+        collectionKey: 'applications',
+        data: applications,
+        page,
+        limit,
+        total,
+      }));
     } catch (error) {
       next(error);
     }

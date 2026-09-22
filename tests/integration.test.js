@@ -1,9 +1,13 @@
 import request from 'supertest';
 import app from '../src/app.js';
-import db from '../src/config/database.js';
+import knex from 'knex';
+import config from '../knexfile.js';
 import { tokenService } from '../src/services/tokenService.js';
 import { passwordService } from '../src/services/passwordService.js';
 import { validationService } from '../src/services/validationService.js';
+
+// Create test database connection
+const testDb = knex(config.test);
 
 // Helper to generate valid CPF
 const generateValidCPF = () => {
@@ -98,9 +102,9 @@ describe('Zircon API Integration Tests', () => {
   let testProfissionalData;
 
   beforeAll(async () => {
-    // Run migrations and seeds
-    await db.migrate.latest();
-    await db.seed.run();
+    // Run migrations and seeds on test database
+    await testDb.migrate.latest();
+    await testDb.seed.run();
 
     // Login as admin
     const adminLogin = await request(app)
@@ -115,7 +119,7 @@ describe('Zircon API Integration Tests', () => {
       .send(testEmpresaData);
 
     // Get verification code from database
-    const empresaUser = await db('users').where('email', testEmpresaData.email).select('code_email_verification').first();
+    const empresaUser = await testDb('users').where('email', testEmpresaData.email).select('code_email_verification').first();
     await request(app)
       .post('/api/auth/verify-email')
       .send({ code: empresaUser.code_email_verification });
@@ -131,7 +135,7 @@ describe('Zircon API Integration Tests', () => {
       .post('/api/auth/register')
       .send(testProfissionalData);
 
-    const profissionalUser = await db('users').where('email', testProfissionalData.email).select('code_email_verification').first();
+    const profissionalUser = await testDb('users').where('email', testProfissionalData.email).select('code_email_verification').first();
     await request(app)
       .post('/api/auth/verify-email')
       .send({ code: profissionalUser.code_email_verification });
@@ -143,7 +147,7 @@ describe('Zircon API Integration Tests', () => {
   });
 
   afterAll(async () => {
-    await db.destroy();
+    await testDb.destroy();
   });
 
   describe('Health Check', () => {
@@ -152,6 +156,21 @@ describe('Zircon API Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.message).toBe('Zircon API is running');
+      expect(response.body.data.checks.database).toBe('ok');
+      expect(response.body.data.uptimeMs).toBeGreaterThan(0);
+    });
+
+    test('GET /api/opportunities should return paginated response with message', async () => {
+      const response = await request(app).get('/api/opportunities?page=1&limit=10');
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe('Lista de vagas carregada com sucesso');
+      expect(response.body.data.opportunities).toBeDefined();
+      expect(response.body.data.pagination).toMatchObject({
+        page: 1,
+        limit: 10,
+      });
     });
   });
 
@@ -288,7 +307,7 @@ describe('Zircon API Integration Tests', () => {
         .post('/api/auth/register')
         .send(freshUser);
       
-      const freshUserDb = await db('users').where('email', freshUser.email).select('code_email_verification').first();
+      const freshUserDb = await testDb('users').where('email', freshUser.email).select('code_email_verification').first();
       await request(app)
         .post('/api/auth/verify-email')
         .send({ code: freshUserDb.code_email_verification });

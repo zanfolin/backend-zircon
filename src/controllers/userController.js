@@ -1,6 +1,7 @@
 import { userModel } from '../models/userModel.js';
 import { passwordService } from '../services/passwordService.js';
 import { uploadService } from '../services/uploadService.js';
+import { buildPaginatedResponse } from '../utils/apiResponse.js';
 
 export const userController = {
   async getProfile(req, res, next) {
@@ -175,18 +176,14 @@ export const userController = {
       const users = await userModel.findAll({ page: Number(page), limit: Number(limit), user_type, status, search });
       const total = await userModel.count({ user_type, status, search });
 
-      res.json({
-        success: true,
-        data: {
-          users,
-          pagination: {
-            page: Number(page),
-            limit: Number(limit),
-            total,
-            totalPages: Math.ceil(total / Number(limit)),
-          },
-        },
-      });
+      res.json(buildPaginatedResponse({
+        message: 'Lista de usuários carregada com sucesso',
+        collectionKey: 'users',
+        data: users,
+        page,
+        limit,
+        total,
+      }));
     } catch (error) {
       next(error);
     }

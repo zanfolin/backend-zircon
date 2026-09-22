@@ -50,7 +50,7 @@ export default {
   test: {
     client: 'sqlite3',
     connection: {
-      filename: ':memory:',
+      filename: path.join(__dirname, 'data', 'zircon.test.db'),
     },
     useNullAsDefault: true,
     migrations: {

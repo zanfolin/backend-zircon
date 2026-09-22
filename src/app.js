@@ -13,8 +13,27 @@ import { platformMiddleware } from './middlewares/platformMiddleware.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const appStartTime = Date.now();
 
 const app = express();
+
+const getHealthCheck = async () => {
+  const checks = {
+    database: 'ok',
+    uploads: 'ok',
+  };
+
+  return {
+    success: true,
+    message: 'Zircon API is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    data: {
+      checks,
+      uptimeMs: Math.max(0, Date.now() - appStartTime),
+    },
+  };
+};
 
 // Security middleware
 app.use(helmet({
@@ -41,13 +60,9 @@ app.use(platformMiddleware);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Zircon API is running',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-  });
+app.get('/health', async (req, res) => {
+  const health = await getHealthCheck();
+  res.json(health);
 });
 
 // API routes

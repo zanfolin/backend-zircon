@@ -2,6 +2,7 @@ import { opportunityModel } from '../models/opportunityModel.js';
 import { applicationModel } from '../models/applicationModel.js';
 import { emailService } from '../services/emailService.js';
 import { userModel } from '../models/userModel.js';
+import { buildPaginatedResponse } from '../utils/apiResponse.js';
 
 export const opportunityController = {
   async create(req, res, next) {
@@ -48,18 +49,14 @@ export const opportunityController = {
       const opportunities = await opportunityModel.findAll(filters);
       const total = await opportunityModel.count(filters);
 
-      res.json({
-        success: true,
-        data: {
-          opportunities,
-          pagination: {
-            page: Number(page),
-            limit: Number(limit),
-            total,
-            totalPages: Math.ceil(total / Number(limit)),
-          },
-        },
-      });
+      res.json(buildPaginatedResponse({
+        message: 'Lista de vagas carregada com sucesso',
+        collectionKey: 'opportunities',
+        data: opportunities,
+        page,
+        limit,
+        total,
+      }));
     } catch (error) {
       next(error);
     }
@@ -176,18 +173,14 @@ export const opportunityController = {
       const opportunities = await opportunityModel.findAll(filters);
       const total = await opportunityModel.count(filters);
 
-      res.json({
-        success: true,
-        data: {
-          opportunities,
-          pagination: {
-            page: Number(page),
-            limit: Number(limit),
-            total,
-            totalPages: Math.ceil(total / Number(limit)),
-          },
-        },
-      });
+      res.json(buildPaginatedResponse({
+        message: 'Lista de vagas carregada com sucesso',
+        collectionKey: 'opportunities',
+        data: opportunities,
+        page,
+        limit,
+        total,
+      }));
     } catch (error) {
       next(error);
     }
@@ -223,18 +216,14 @@ export const opportunityController = {
       const opportunities = await opportunityModel.findAll(filters);
       const total = await opportunityModel.count(filters);
 
-      res.json({
-        success: true,
-        data: {
-          opportunities,
-          pagination: {
-            page: Number(page),
-            limit: Number(limit),
-            total,
-            totalPages: Math.ceil(total / Number(limit)),
-          },
-        },
-      });
+      res.json(buildPaginatedResponse({
+        message: 'Lista de vagas carregada com sucesso',
+        collectionKey: 'opportunities',
+        data: opportunities,
+        page,
+        limit,
+        total,
+      }));
     } catch (error) {
       next(error);
     }
