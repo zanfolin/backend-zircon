@@ -10,11 +10,14 @@ const router = Router();
 // Public routes
 router.get('/', validate(opportunitySchemas.list), opportunityController.list);
 router.get('/sectors', opportunityController.getSectors);
+
+// Protected routes - Empresa and Admin (specific routes before :id)
+router.get('/my', authMiddleware, requireRole('EMPRESA', 'ADMIN'), validate(opportunitySchemas.list), opportunityController.listMyOpportunities);
+
 router.get('/:id', opportunityController.getById);
 
 // Protected routes - Empresa and Admin
 router.post('/', authMiddleware, requireRole('EMPRESA', 'ADMIN'), validate(opportunitySchemas.create), opportunityController.create);
-router.get('/my', authMiddleware, requireRole('EMPRESA', 'ADMIN'), validate(opportunitySchemas.list), opportunityController.listMyOpportunities);
 router.put('/:id', authMiddleware, requireRole('EMPRESA', 'ADMIN'), validate(opportunitySchemas.update), opportunityController.update);
 router.delete('/:id', authMiddleware, requireRole('EMPRESA', 'ADMIN'), opportunityController.delete);
 

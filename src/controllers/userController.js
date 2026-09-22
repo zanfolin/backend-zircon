@@ -117,7 +117,7 @@ export const userController = {
     try {
       const { currentPassword, newPassword } = req.body;
 
-      const user = await userModel.findById(req.user.id);
+      const user = await userModel.findByIdWithPassword(req.user.id);
       if (!user) {
         return res.status(404).json({
           success: false,

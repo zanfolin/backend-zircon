@@ -36,6 +36,7 @@ const generateValidCNPJ = () => {
   const base = Array.from({ length: 12 }, () => Math.floor(Math.random() * 10)).join('');
   
   // Calculate first check digit
+  // Weights: 5,4,3,2,9,8,7,6,5,4,3,2 (applied left to right to the 12 base digits)
   const weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
   let sum = 0;
   for (let i = 0; i < 12; i++) {
@@ -45,12 +46,15 @@ const generateValidCNPJ = () => {
   digit1 = digit1 < 2 ? 0 : 11 - digit1;
   
   // Calculate second check digit
+  // Weights: 6,5,4,3,2,9,8,7,6,5,4,3,2 (applied left to right to 13 digits: 12 base + first check digit)
   const weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
   sum = 0;
+  // First 12 digits with weights2[0] to weights2[11]
   for (let i = 0; i < 12; i++) {
-    sum += parseInt(base[i]) * weights2[i + 1];
+    sum += parseInt(base[i]) * weights2[i];
   }
-  sum += digit1 * weights2[0];
+  // First check digit with weights2[12]
+  sum += digit1 * weights2[12];
   let digit2 = sum % 11;
   digit2 = digit2 < 2 ? 0 : 11 - digit2;
   
@@ -260,7 +264,7 @@ describe('Zircon API Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data.user.email).toBe('profissional@test.com');
+      expect(response.body.data.user.email).toBe(testProfissionalData.email);
     });
 
     test('PUT /api/users/profile should update user profile', async () => {

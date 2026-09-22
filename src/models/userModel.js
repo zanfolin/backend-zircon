@@ -48,6 +48,14 @@ export const userModel = {
       .first();
   },
 
+  async findByIdWithPassword(id) {
+    return db('users')
+      .select('*')
+      .where({ id })
+      .whereNull('deleted_at')
+      .first();
+  },
+
   async findByEmail(email) {
     return db('users')
       .select('*')
