@@ -5,10 +5,11 @@ import type { Application, Opportunity, OpportunityStatus } from '../types/api';
 
 export function useMeQuery() {
   const accessToken = useAuthStore((s) => s.accessToken);
+  const userId = useAuthStore((s) => s.user?.id);
   const setUser = useAuthStore((s) => s.setUser);
 
   return useQuery({
-    queryKey: ['me'],
+    queryKey: ['me', userId],
     queryFn: async () => {
       const user = await authApi.me();
       setUser(user);
@@ -20,8 +21,9 @@ export function useMeQuery() {
 }
 
 export function useMyOpportunities(isAdmin: boolean) {
+  const userId = useAuthStore((s) => s.user?.id);
   return useQuery({
-    queryKey: ['opportunities', isAdmin ? 'admin' : 'my'],
+    queryKey: ['opportunities', isAdmin ? 'admin' : 'my', userId],
     queryFn: async () => {
       const res = isAdmin
         ? await opportunityApi.adminListAll({ page: 1, limit: 100 })

@@ -146,6 +146,7 @@ export function ConfiguracoesPage() {
       // ignore
     }
     clear();
+    qc.clear();
     navigate('/login');
   };
 
@@ -154,6 +155,7 @@ export function ConfiguracoesPage() {
     try {
       await userApi.deleteAccount();
       clear();
+      qc.clear();
       showToast('Conta excluída com sucesso');
       navigate('/login');
     } catch (err) {

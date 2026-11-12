@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Briefcase, FileText, LayoutDashboard, LogOut, Moon, Plus, Settings, Sun, Users } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
@@ -22,6 +23,7 @@ const PAGE_TITLES: Record<string, { kicker: string; title: string; adminTitle?: 
 };
 
 export function AppShell({ onOpenNewVaga }: AppShellProps) {
+  const qc = useQueryClient();
   const { user, clear } = useAuthStore();
   const { dark, toggle } = useThemeStore();
   const showToast = useUIStore((s) => s.showToast);
@@ -48,6 +50,7 @@ export function AppShell({ onOpenNewVaga }: AppShellProps) {
       // Ignore network errors on stateless JWT logout
     }
     clear();
+    qc.clear();
     showToast('Sessão encerrada');
     navigate('/login');
   };

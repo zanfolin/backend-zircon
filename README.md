@@ -9,6 +9,12 @@ projeto-zircon/
 └── mobile-zircon/    # Aplicativo Mobile em React Native + Expo Router (Profissionais)
 ```
 
+## Manuais do Usuário (Passo a Passo com Prints)
+
+- **Backend (API & E-mails)**: [backend-zircon/MANUAL.md](./backend-zircon/MANUAL.md)
+- **Painel Web (Empresas & Admin)**: [web-zircon/MANUAL.md](./web-zircon/MANUAL.md)
+- **App Mobile Expo (Profissionais)**: [mobile-zircon/MANUAL.md](./mobile-zircon/MANUAL.md)
+
 ---
 
 ## Tecnologias Utilizadas
